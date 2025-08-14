@@ -1,6 +1,10 @@
 en:
   js:
     s3_uploader:
+      admin:
+        upload_section_title: "Upload Files to S3"
+        title: "S3 File Uploader"
+        plugin_disabled: "Please enable the S3 Uploader plugin in settings first."
       title: "S3 Uploader"
       upload_button: "Select a file to upload to S3"
       uploading: "Uploading..."
