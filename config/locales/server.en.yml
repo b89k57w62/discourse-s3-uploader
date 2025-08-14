@@ -1,0 +1,7 @@
+en:
+  site_settings:
+    s3_uploader_enabled: "Enable the S3 Uploader plugin."
+    s3_uploader_bucket: "S3 bucket name for uploads."
+    s3_uploader_region: "AWS region for the S3 bucket."
+    s3_uploader_access_key_id: "AWS Access Key ID for S3."
+    s3_uploader_secret_access_key: "AWS Secret Access Key for S3."

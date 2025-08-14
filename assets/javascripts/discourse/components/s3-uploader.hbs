@@ -1,0 +1,20 @@
+<div class="control-group">
+  <label class="control-label">{{I18n "js.s3_uploader.title"}}</label>
+  <div class="controls">
+    <input type="file" {{on "change" this.uploadFile}} disabled={{this.isLoading}}>
+  </div>
+</div>
+
+{{#if this.statusMessage}}
+  <div class="control-group">
+    <div class="controls">
+      <p>
+        {{this.statusMessage}}
+        {{#if this.finalUrl}}
+          <input type="text" value={{this.finalUrl}} readonly onclick={{action (fn this.select)}}>
+          <a href={{this.finalUrl}} target="_blank" rel="noopener noreferrer">[Preview]</a>
+        {{/if}}
+      </p>
+    </div>
+  </div>
+{{/if}}

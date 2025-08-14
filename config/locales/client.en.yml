@@ -1,0 +1,11 @@
+en:
+  js:
+    s3_uploader:
+      title: "S3 Uploader"
+      upload_button: "Select a file to upload to S3"
+      uploading: "Uploading..."
+      success: "Upload successful! URL:"
+      error_presign: "Error getting upload permission from server."
+      error_upload: "Error uploading file to S3."
+      error_file_type: "Please select a file."
+      error_file_size: "File size exceeds %{max} limit."
