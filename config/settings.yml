@@ -3,3 +3,6 @@ plugins:
     default: false
     client: true
     description: "Enable S3 Uploader plugin for admin file uploads. Uses Discourse's built-in S3 configuration."
+  s3_uploader_bucket_name:
+    default: ""
+    description: "Override S3 bucket name for uploads (leave empty to use Discourse's default S3 bucket)"
