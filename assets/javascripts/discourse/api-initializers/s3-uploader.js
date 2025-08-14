@@ -45,54 +45,48 @@ export default apiInitializer("0.11.1", (api) => {
               
               statusDiv.innerHTML = '<p style="color: blue;">Uploading...</p>';
               
+              // Create FormData with the file
+              const formData = new FormData();
+              formData.append("file", file);
+              
               try {
-                const presignResponse = await fetch(`/s3-uploader/presigned-url?filename=${encodeURIComponent(file.name)}`, {
-                  method: "GET",
-                  headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || ""
-                  },
-                  credentials: "include",
-                });
-                
-                if (!presignResponse.ok) {
-                  const errorData = await presignResponse.json();
-                  throw new Error(errorData.error || "Failed to get presigned URL");
-                }
-                
-                const presignData = await presignResponse.json();
-                
-                const formData = new FormData();
-                
-                // Add all the fields from presigned_post
-                if (presignData.presigned_post && presignData.presigned_post.fields) {
-                  Object.keys(presignData.presigned_post.fields).forEach((key) => {
-                    formData.append(key, presignData.presigned_post.fields[key]);
-                  });
-                }
-                
-                // Add the file last (important for S3)
-                formData.append("file", file);
-                
-                // Upload to S3
-                const s3Url = presignData.presigned_post?.url || presignData.presigned_post;
-                const s3Response = await fetch(s3Url, {
+                // Upload directly to our controller
+                const response = await fetch("/s3-uploader/upload", {
                   method: "POST",
+                  headers: {
+                    "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
+                    "X-Requested-With": "XMLHttpRequest"
+                  },
                   body: formData,
+                  credentials: "include"
                 });
                 
-                if (s3Response.ok || s3Response.status === 204) {
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
                   statusDiv.innerHTML = `
-                    <p style="color: green;">✅ Upload successful!</p>
-                    <p>File URL: <a href="${presignData.url}" target="_blank">${presignData.url}</a></p>
+                    <div style="padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+                      <p style="color: #155724; margin: 0 0 10px 0;">✅ Upload successful!</p>
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="text" value="${data.url}" readonly style="flex: 1; padding: 5px;" onclick="this.select()">
+                        <a href="${data.url}" target="_blank" class="btn btn-small">View</a>
+                      </div>
+                      <p style="color: #666; font-size: 12px; margin-top: 5px;">
+                        ${data.original_filename} (${data.human_filesize || data.filesize + ' bytes'})
+                      </p>
+                    </div>
                   `;
-                  fileInput.value = "";
+                  fileInput.value = ""; // Clear the file input
                 } else {
-                  throw new Error(`S3 upload failed with status: ${s3Response.status}`);
+                  throw new Error(data.errors || data.error || "Upload failed");
                 }
               } catch (error) {
                 console.error("Upload error:", error);
-                statusDiv.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+                statusDiv.innerHTML = `
+                  <div style="padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+                    <p style="color: #721c24; margin: 0;">❌ Error: ${error.message}</p>
+                  </div>
+                `;
               }
             });
           }

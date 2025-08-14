@@ -15,7 +15,7 @@ after_initialize do
   end
 
   S3Uploader::Engine.routes.draw do
-    get "/presigned-url" => "admin/uploads#generate_presigned_url"
+    post "/upload" => "admin/uploads#create"
   end
 
   Discourse::Application.routes.append do
