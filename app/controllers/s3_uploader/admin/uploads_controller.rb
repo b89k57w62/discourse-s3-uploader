@@ -35,11 +35,19 @@ module S3Uploader
               success_action_status: '201'
             )
   
-            public_url = "#{presigned_post.url}/#{key}"
+            public_url = "https://#{SiteSetting.s3_uploader_bucket}.s3.#{SiteSetting.s3_uploader_region}.amazonaws.com/#{key}"
   
             Discourse.logger.info("S3Uploader: Successfully generated presigned URL for key: #{key}")
   
-            render json: { presigned_post: presigned_post.fields, url: public_url }, status: :ok
+            presigned_post_data = {
+              url: presigned_post.url,
+              fields: presigned_post.fields
+            }
+  
+            render json: { 
+              presigned_post: presigned_post_data, 
+              url: public_url 
+            }, status: :ok
   
           rescue => e
             Discourse.logger.error("S3Uploader: Failed to generate presigned URL. Error: #{e.message}")

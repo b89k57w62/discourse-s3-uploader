@@ -64,17 +64,19 @@ export default apiInitializer("0.11.1", (api) => {
                 
                 const formData = new FormData();
                 
-                if (presignData.presigned_post) {
-                  Object.keys(presignData.presigned_post).forEach((key) => {
-                    if (key !== 'url') {
-                      formData.append(key, presignData.presigned_post[key]);
-                    }
+                // Add all the fields from presigned_post
+                if (presignData.presigned_post && presignData.presigned_post.fields) {
+                  Object.keys(presignData.presigned_post.fields).forEach((key) => {
+                    formData.append(key, presignData.presigned_post.fields[key]);
                   });
                 }
                 
+                // Add the file last (important for S3)
                 formData.append("file", file);
                 
-                const s3Response = await fetch(presignData.presigned_post.url, {
+                // Upload to S3
+                const s3Url = presignData.presigned_post?.url || presignData.presigned_post;
+                const s3Response = await fetch(s3Url, {
                   method: "POST",
                   body: formData,
                 });
