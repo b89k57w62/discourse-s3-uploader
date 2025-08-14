@@ -6,9 +6,6 @@
 
 enabled_site_setting :s3_uploader_enabled
 
-# AWS SDK is already included in Discourse, no need to specify version
-# gem 'aws-sdk-s3', '1.114.0', require: false
-
 after_initialize do
   module ::S3Uploader
     class Engine < ::Rails::Engine
