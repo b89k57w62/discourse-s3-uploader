@@ -1,7 +1,7 @@
 plugins:
   s3_uploader_enabled:
     default: false
-    client: false
+    client: true
   s3_uploader_bucket:
     default: "fungps-upload"
   s3_uploader_region:
