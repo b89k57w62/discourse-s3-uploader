@@ -1,5 +1,5 @@
 <div class="control-group">
-  <label class="control-label">{{I18n "js.s3_uploader.title"}}</label>
+  <label class="control-label">Upload File to S3</label>
   <div class="controls">
     <input type="file" {{on "change" this.uploadFile}} disabled={{this.isLoading}}>
   </div>
@@ -11,7 +11,7 @@
       <p>
         {{this.statusMessage}}
         {{#if this.finalUrl}}
-          <input type="text" value={{this.finalUrl}} readonly onclick={{action (fn this.select)}}>
+          <input type="text" value={{this.finalUrl}} readonly>
           <a href={{this.finalUrl}} target="_blank" rel="noopener noreferrer">[Preview]</a>
         {{/if}}
       </p>

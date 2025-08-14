@@ -6,6 +6,9 @@
 
 enabled_site_setting :s3_uploader_enabled
 
+register_component "s3-uploader"
+register_asset "s3-uploader"
+
 after_initialize do
   module ::S3Uploader
     class Engine < ::Rails::Engine
