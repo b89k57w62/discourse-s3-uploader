@@ -24,7 +24,7 @@ export default apiInitializer("0.11.1", (api) => {
             <h3 style="margin-bottom: 15px;">📤 S3 File Uploader Tool</h3>
             <p style="margin-bottom: 15px;">Upload files directly to your S3 bucket:</p>
             <div style="padding: 15px; background: white; border-radius: 4px;">
-              <input type="file" id="s3-file-input" style="margin-bottom: 10px;">
+              <input type="file" id="s3-file-input" style="margin-bottom: 10px;" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv">
               <button id="s3-upload-btn" class="btn btn-primary">Upload to S3</button>
               <div id="s3-upload-status" style="margin-top: 10px;"></div>
             </div>
@@ -39,18 +39,24 @@ export default apiInitializer("0.11.1", (api) => {
             uploadBtn.addEventListener("click", async () => {
               const file = fileInput.files[0];
               if (!file) {
-                statusDiv.innerHTML = '<p style="color: red;">Please select a file first.</p>';
+                statusDiv.innerHTML = '';
+                const errorP = document.createElement('p');
+                errorP.style.color = 'red';
+                errorP.textContent = 'Please select a file first.';
+                statusDiv.appendChild(errorP);
                 return;
               }
               
-              statusDiv.innerHTML = '<p style="color: blue;">Uploading...</p>';
+              statusDiv.innerHTML = '';
+              const uploadingP = document.createElement('p');
+              uploadingP.style.color = 'blue';
+              uploadingP.textContent = 'Uploading...';
+              statusDiv.appendChild(uploadingP);
               
-              // Create FormData with the file
               const formData = new FormData();
               formData.append("file", file);
               
               try {
-                // Upload directly to our controller
                 const response = await fetch("/s3-uploader/upload", {
                   method: "POST",
                   headers: {
@@ -64,29 +70,62 @@ export default apiInitializer("0.11.1", (api) => {
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                  statusDiv.innerHTML = `
-                    <div style="padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
-                      <p style="color: #155724; margin: 0 0 10px 0;">✅ Upload successful!</p>
-                      <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="text" value="${data.url}" readonly style="flex: 1; padding: 5px;" onclick="this.select()">
-                        <a href="${data.url}" target="_blank" class="btn btn-small">View</a>
-                      </div>
-                      <p style="color: #666; font-size: 12px; margin-top: 5px;">
-                        ${data.original_filename} (${data.human_filesize || data.filesize + ' bytes'})
-                      </p>
-                    </div>
-                  `;
-                  fileInput.value = ""; // Clear the file input
+                  statusDiv.innerHTML = '';
+                  
+                  const successDiv = document.createElement('div');
+                  successDiv.style.cssText = 'padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;';
+                  
+                  const successMsg = document.createElement('p');
+                  successMsg.style.cssText = 'color: #155724; margin: 0 0 10px 0;';
+                  successMsg.textContent = '✅ Upload successful!';
+                  successDiv.appendChild(successMsg);
+                  
+                  const urlContainer = document.createElement('div');
+                  urlContainer.style.cssText = 'display: flex; align-items: center; gap: 10px;';
+                  
+                  const urlInput = document.createElement('input');
+                  urlInput.type = 'text';
+                  urlInput.value = data.url;
+                  urlInput.readOnly = true;
+                  urlInput.style.cssText = 'flex: 1; padding: 5px;';
+                  urlInput.onclick = function() { this.select(); };
+                  urlContainer.appendChild(urlInput);
+                  
+                  const viewLink = document.createElement('a');
+                  viewLink.href = data.url;
+                  viewLink.target = '_blank';
+                  viewLink.rel = 'noopener noreferrer';
+                  viewLink.className = 'btn btn-small';
+                  viewLink.textContent = 'View';
+                  urlContainer.appendChild(viewLink);
+                  
+                  successDiv.appendChild(urlContainer);
+                  
+                  const fileInfo = document.createElement('p');
+                  fileInfo.style.cssText = 'color: #666; font-size: 12px; margin-top: 5px;';
+                  const fileSize = data.human_filesize || (data.filesize + ' bytes');
+                  fileInfo.textContent = `${data.original_filename} (${fileSize})`;
+                  successDiv.appendChild(fileInfo);
+                  
+                  statusDiv.appendChild(successDiv);
+                  fileInput.value = "";
                 } else {
                   throw new Error(data.errors || data.error || "Upload failed");
                 }
               } catch (error) {
                 console.error("Upload error:", error);
-                statusDiv.innerHTML = `
-                  <div style="padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
-                    <p style="color: #721c24; margin: 0;">❌ Error: ${error.message}</p>
-                  </div>
-                `;
+                
+                statusDiv.innerHTML = '';
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;';
+                
+                const errorMsg = document.createElement('p');
+                errorMsg.style.cssText = 'color: #721c24; margin: 0;';
+                errorMsg.textContent = `❌ Error: ${error.message}`;
+                errorDiv.appendChild(errorMsg);
+                
+                statusDiv.appendChild(errorDiv);
               }
             });
           }

@@ -2,15 +2,4 @@ plugins:
   s3_uploader_enabled:
     default: false
     client: true
-  s3_uploader_bucket:
-    default: "fungps-upload"
-  s3_uploader_region:
-    default: "ap-southeast-1"
-  s3_uploader_access_key_id:
-    default: ""
-    secret: true
-  s3_uploader_secret_access_key:
-    default: ""
-    secret: true
-  s3_uploader_upload_path:
-    default: "admin-uploads"
+    description: "Enable S3 Uploader plugin for admin file uploads. Uses Discourse's built-in S3 configuration."
