@@ -3,17 +3,14 @@ import { apiInitializer } from "discourse/lib/api";
 export default apiInitializer("0.11.1", (api) => {
   const siteSettings = api.container.lookup("service:site-settings");
   
-  // Only proceed if the plugin is enabled
   if (!siteSettings.s3_uploader_enabled) {
     return;
   }
   
-  // Check if we're on the S3 uploader settings page
   api.onPageChange((url) => {
     if (url.includes("/admin/plugins/discourse-s3-uploader") || 
         url.includes("/admin/site_settings/category/plugins?filter=s3_uploader")) {
       
-      // Add custom content after page loads
       setTimeout(() => {
         const container = document.querySelector(".admin-plugin-config-page") || 
                          document.querySelector(".admin-contents") ||
@@ -34,7 +31,6 @@ export default apiInitializer("0.11.1", (api) => {
           `;
           container.appendChild(uploaderDiv);
           
-          // Add upload functionality
           const fileInput = document.getElementById("s3-file-input");
           const uploadBtn = document.getElementById("s3-upload-btn");
           const statusDiv = document.getElementById("s3-upload-status");
@@ -50,22 +46,51 @@ export default apiInitializer("0.11.1", (api) => {
               statusDiv.innerHTML = '<p style="color: blue;">Uploading...</p>';
               
               try {
-                // Call the upload API
-                const response = await fetch("/s3-uploader/presigned-url", {
+                const presignResponse = await fetch(`/s3-uploader/presigned-url?filename=${encodeURIComponent(file.name)}`, {
                   method: "GET",
                   headers: {
                     "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || ""
                   },
                   credentials: "include",
                 });
                 
-                if (response.ok) {
-                  statusDiv.innerHTML = '<p style="color: green;">Upload successful!</p>';
+                if (!presignResponse.ok) {
+                  const errorData = await presignResponse.json();
+                  throw new Error(errorData.error || "Failed to get presigned URL");
+                }
+                
+                const presignData = await presignResponse.json();
+                
+                const formData = new FormData();
+                
+                if (presignData.presigned_post) {
+                  Object.keys(presignData.presigned_post).forEach((key) => {
+                    if (key !== 'url') {
+                      formData.append(key, presignData.presigned_post[key]);
+                    }
+                  });
+                }
+                
+                formData.append("file", file);
+                
+                const s3Response = await fetch(presignData.presigned_post.url, {
+                  method: "POST",
+                  body: formData,
+                });
+                
+                if (s3Response.ok || s3Response.status === 204) {
+                  statusDiv.innerHTML = `
+                    <p style="color: green;">✅ Upload successful!</p>
+                    <p>File URL: <a href="${presignData.url}" target="_blank">${presignData.url}</a></p>
+                  `;
+                  fileInput.value = "";
                 } else {
-                  statusDiv.innerHTML = '<p style="color: red;">Upload failed. Please try again.</p>';
+                  throw new Error(`S3 upload failed with status: ${s3Response.status}`);
                 }
               } catch (error) {
-                statusDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                console.error("Upload error:", error);
+                statusDiv.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
               }
             });
           }
