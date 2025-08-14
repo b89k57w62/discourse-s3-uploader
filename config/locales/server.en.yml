@@ -1,3 +1,6 @@
 en:
   site_settings:
     s3_uploader_enabled: "Enable the S3 Uploader plugin for admin file uploads. Uses Discourse's built-in S3 configuration."
+  s3_uploader:
+    admin:
+      title: "S3 Uploader"

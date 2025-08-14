@@ -6,6 +6,8 @@
 
 enabled_site_setting :s3_uploader_enabled
 
+add_admin_route 's3_uploader.admin.title', 's3-uploader'
+
 after_initialize do
   module ::S3Uploader
     class Engine < ::Rails::Engine
