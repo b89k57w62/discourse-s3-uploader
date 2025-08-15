@@ -69,7 +69,7 @@ export default apiInitializer("0.11.1", (api) => {
                 
                 const data = await response.json();
                 
-                if (response.ok && data.success) {
+                if (response.ok && data.url) {
                   statusDiv.innerHTML = '';
                   
                   const successDiv = document.createElement('div');
@@ -110,7 +110,8 @@ export default apiInitializer("0.11.1", (api) => {
                   statusDiv.appendChild(successDiv);
                   fileInput.value = "";
                 } else {
-                  throw new Error(data.errors || data.error || "Upload failed");
+                  const errorMessage = data.errors || data.error || "Upload failed";
+                  throw new Error(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
                 }
               } catch (error) {
                 console.error("Upload error:", error);

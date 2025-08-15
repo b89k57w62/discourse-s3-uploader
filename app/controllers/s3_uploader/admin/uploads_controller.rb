@@ -27,30 +27,26 @@ module S3Uploader
         
         begin
           Rails.logger.info("S3Uploader: Admin #{current_user.username} (ID: #{current_user.id}) uploading file: #{file.original_filename}")
-          
-          upload = UploadCreator.new(
-            file,
-            file.original_filename,
+
+          info = UploadsController.create_upload(
+            current_user: current_user,
+            file: file,
+            url: nil,
             type: "admin_s3_upload",
-            for_site_setting: false
-          ).create_for(current_user.id)
+            for_private_message: false,
+            for_site_setting: false,
+            pasted: false,
+            is_api: false,
+            retain_hours: 0
+          )
           
-          if upload.persisted?
-            Rails.logger.info("S3Uploader: Upload successful - ID: #{upload.id}, URL: #{upload.url}")
-            
-            render json: {
-              success: true,
-              url: upload.url,
-              short_url: upload.short_url,
-              original_filename: upload.original_filename,
-              filesize: upload.filesize,
-              human_filesize: upload.human_filesize,
-              width: upload.width,
-              height: upload.height
-            }
+          if info.is_a?(Upload) && info.persisted?
+            Rails.logger.info("S3Uploader: Upload successful - ID: #{info.id}")
+
+            render json: UploadsController.serialize_upload(info)
           else
-            Rails.logger.warn("S3Uploader: Upload validation failed - #{upload.errors.full_messages.join(', ')}")
-            render_json_error(upload.errors.full_messages.join(", "))
+            Rails.logger.warn("S3Uploader: Upload validation failed - #{info[:errors]&.join(', ')}")
+            render_json_error(info[:errors]&.join(", ") || "Upload failed")
           end
         rescue => e
           Rails.logger.error("S3Uploader: Upload failed for user #{current_user.username}: #{e.message}")
