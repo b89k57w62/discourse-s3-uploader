@@ -59,6 +59,13 @@ module S3Uploader
               cdn_url = Discourse.store.cdn_url(info.url)
               Rails.logger.info("S3Uploader: Generated CDN URL via store.cdn_url: #{cdn_url}")
               
+              # 如果store.cdn_url返回的仍然是S3 URL，手动替换前缀
+              if cdn_url.include?('fungps-upload.s3.dualstack.ap-southeast-1.amazonaws.com')
+                # 直接替换S3前缀为CDN前缀
+                cdn_url = cdn_url.gsub('//fungps-upload.s3.dualstack.ap-southeast-1.amazonaws.com', '//images.fungps.net')
+                Rails.logger.info("S3Uploader: Manually replaced S3 prefix with CDN prefix: #{cdn_url}")
+              end
+              
               render json: {
                 success: true,
                 url: cdn_url,  # 使用CDN URL
