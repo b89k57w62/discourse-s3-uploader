@@ -32,9 +32,7 @@ module S3Uploader
           # 检查Discourse的S3配置
           s3_bucket = SiteSetting.s3_upload_bucket
           s3_region = SiteSetting.s3_region
-          cdn_url = SiteSetting.cdn_url
           Rails.logger.info("S3Uploader: S3 Bucket: #{s3_bucket}, Region: #{s3_region}")
-          Rails.logger.info("S3Uploader: CDN URL: #{cdn_url}")
           
           # 使用Discourse的标准UploadsController.create_upload方法
           begin
