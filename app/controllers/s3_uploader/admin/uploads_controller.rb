@@ -32,10 +32,11 @@ module S3Uploader
           # 检查Discourse的S3配置
           s3_bucket = SiteSetting.s3_upload_bucket
           s3_region = SiteSetting.s3_region
+          cdn_url = SiteSetting.cdn_url
           Rails.logger.info("S3Uploader: S3 Bucket: #{s3_bucket}, Region: #{s3_region}")
+          Rails.logger.info("S3Uploader: CDN URL: #{cdn_url}")
           
           # 使用Discourse的标准UploadsController.create_upload方法
-          # 这样就能获得正确的CDN URL而不是S3 URL
           begin
             info = ::UploadsController.create_upload(
               current_user: current_user,
@@ -53,9 +54,24 @@ module S3Uploader
             
             if info.is_a?(Upload) && info.persisted?
               Rails.logger.info("S3Uploader: Upload successful - ID: #{info.id}")
+              Rails.logger.info("S3Uploader: Upload URL: #{info.url}")
+              Rails.logger.info("S3Uploader: Upload short_url: #{info.short_url}")
               
-              # 使用Discourse的serialize_upload方法获取正确的URL
-              render json: ::UploadsController.serialize_upload(info)
+              # 使用Discourse的store.cdn_url方法自动转换S3 URL为CDN URL
+              cdn_url = Discourse.store.cdn_url(info.url)
+              Rails.logger.info("S3Uploader: Generated CDN URL via store.cdn_url: #{cdn_url}")
+              
+              render json: {
+                success: true,
+                url: cdn_url,  # 使用CDN URL
+                s3_url: info.url,
+                short_url: info.short_url,
+                original_filename: info.original_filename,
+                filesize: info.filesize,
+                human_filesize: info.human_filesize,
+                width: info.width,
+                height: info.height
+              }
             else
               Rails.logger.warn("S3Uploader: Upload validation failed - #{info[:errors]&.join(', ')}")
               render_json_error(info[:errors]&.join(", ") || "Upload failed")
@@ -69,7 +85,23 @@ module S3Uploader
           Rails.logger.error("S3Uploader: Upload failed for user #{current_user.username}: #{e.message}")
           Rails.logger.error(e.backtrace.join("\n"))
           
-          render_json_error("Upload failed. Please try again or contact an administrator if the problem persists.")
+          # 提供更具体的错误信息
+          error_message = case e.class.to_s
+          when 'Discourse::InvalidAccess'
+            "Access denied. Please check your permissions."
+          when 'Discourse::InvalidParameters'
+            "Invalid file parameters. Please check the file format and size."
+          when 'Aws::S3::Errors::AccessDenied'
+            "S3 access denied. Please check your S3 configuration."
+          when 'Aws::S3::Errors::NoSuchBucket'
+            "S3 bucket not found. Please check your S3 configuration."
+          when 'Aws::S3::Errors::InvalidAccessKeyId'
+            "Invalid S3 credentials. Please check your AWS configuration."
+          else
+            "Upload failed: #{e.message}. Please try again or contact an administrator if the problem persists."
+          end
+          
+          render_json_error(error_message)
         end
       end
       
