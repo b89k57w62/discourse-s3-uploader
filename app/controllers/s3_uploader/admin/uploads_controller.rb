@@ -26,15 +26,6 @@ module S3Uploader
         end
         
         begin
-          Rails.logger.info("S3Uploader: Admin #{current_user.username} (ID: #{current_user.id}) uploading file: #{file.original_filename}")
-          Rails.logger.info("S3Uploader: File size: #{file.size}, Content type: #{file.content_type}")
-          
-          # 检查Discourse的S3配置
-          s3_bucket = SiteSetting.s3_upload_bucket
-          s3_region = SiteSetting.s3_region
-          Rails.logger.info("S3Uploader: S3 Bucket: #{s3_bucket}, Region: #{s3_region}")
-          
-          # 使用Discourse的标准UploadsController.create_upload方法
           begin
             info = ::UploadsController.create_upload(
               current_user: current_user,
@@ -48,27 +39,18 @@ module S3Uploader
               retain_hours: 0
             )
             
-            Rails.logger.info("S3Uploader: UploadsController.create_upload completed, result: #{info.inspect}")
-            
             if info.is_a?(Upload) && info.persisted?
               Rails.logger.info("S3Uploader: Upload successful - ID: #{info.id}")
-              Rails.logger.info("S3Uploader: Upload URL: #{info.url}")
-              Rails.logger.info("S3Uploader: Upload short_url: #{info.short_url}")
               
-              # 使用Discourse的store.cdn_url方法自动转换S3 URL为CDN URL
               cdn_url = Discourse.store.cdn_url(info.url)
-              Rails.logger.info("S3Uploader: Generated CDN URL via store.cdn_url: #{cdn_url}")
               
-              # 如果store.cdn_url返回的仍然是S3 URL，手动替换前缀
               if cdn_url.include?('fungps-upload.s3.dualstack.ap-southeast-1.amazonaws.com')
-                # 直接替换S3前缀为CDN前缀
                 cdn_url = cdn_url.gsub('//fungps-upload.s3.dualstack.ap-southeast-1.amazonaws.com', '//images.fungps.net')
-                Rails.logger.info("S3Uploader: Manually replaced S3 prefix with CDN prefix: #{cdn_url}")
               end
               
               render json: {
                 success: true,
-                url: cdn_url,  # 使用CDN URL
+                url: cdn_url,
                 s3_url: info.url,
                 short_url: info.short_url,
                 original_filename: info.original_filename,
@@ -82,15 +64,12 @@ module S3Uploader
               render_json_error(info[:errors]&.join(", ") || "Upload failed")
             end
           rescue => e
-            Rails.logger.error("S3Uploader: UploadsController.create_upload failed: #{e.message}")
-            Rails.logger.error(e.backtrace.join("\n"))
+            Rails.logger.error("S3Uploader: Upload creation failed: #{e.message}")
             render_json_error("Upload creation failed: #{e.message}")
           end
         rescue => e
           Rails.logger.error("S3Uploader: Upload failed for user #{current_user.username}: #{e.message}")
-          Rails.logger.error(e.backtrace.join("\n"))
           
-          # 提供更具体的错误信息
           error_message = case e.class.to_s
           when 'Discourse::InvalidAccess'
             "Access denied. Please check your permissions."
