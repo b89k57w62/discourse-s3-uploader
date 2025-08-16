@@ -24,7 +24,7 @@ export default apiInitializer("0.11.1", (api) => {
             <h3 style="margin-bottom: 15px;">📤 S3 File Uploader Tool</h3>
             <p style="margin-bottom: 15px;">Upload files directly to your S3 bucket:</p>
             <div style="padding: 15px; background: white; border-radius: 4px;">
-              <input type="file" id="s3-file-input" style="margin-bottom: 10px;" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv">
+              <input type="file" id="s3-file-input" style="margin-bottom: 10px;" accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv">
               <button id="s3-upload-btn" class="btn btn-primary">Upload to S3</button>
               <div id="s3-upload-status" style="margin-top: 10px;"></div>
             </div>
