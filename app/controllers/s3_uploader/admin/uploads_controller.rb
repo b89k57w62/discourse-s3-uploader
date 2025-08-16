@@ -9,7 +9,7 @@ module S3Uploader
       skip_before_action :check_xhr, only: [:create]
       
       MAX_FILE_SIZE = 10.megabytes
-      ALLOWED_EXTENSIONS = %w[jpg jpeg png gif webp pdf doc docx xls xlsx txt csv]
+      ALLOWED_EXTENSIONS = %w[jpg jpeg png gif webp mp4 pdf doc docx xls xlsx txt csv]
       
       def create
         return render_json_error("No file provided") unless params[:file].present?
